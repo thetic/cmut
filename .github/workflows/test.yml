@@ -1,0 +1,17 @@
+---
+name: test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure
+        run: cmake -B build
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build
