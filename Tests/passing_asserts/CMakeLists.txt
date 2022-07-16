@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(assert LANGUAGES NONE)
 
-include(CMUT)
-
 assert(TRUE)
 assert("NOT FALSE")
 assert("1 GREATER 0")

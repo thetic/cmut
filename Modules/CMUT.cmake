@@ -26,6 +26,7 @@ function(add_cmut_test_project)
         message(FATAL_ERROR "add_cmut_test_project must be given non-empty SOURCE_DIR.")
     endif()
 
+    # Set source directory
     get_filename_component(source_dir
         ${CMUT_SOURCE_DIR} ABSOLUTE
         BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
@@ -40,27 +41,35 @@ function(add_cmut_test_project)
         )
     endif()
 
+
+    # Injected assertion support
+    set(assert_script "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/CMUT/assert.cmake")
+
+    # Set binary directory
+    set(binary_dir "${CMAKE_CURRENT_BINARY_DIR}/cmut/${CMUT_NAME}")
+
+    # Delete the binary directory before running.
+    add_test(
+        NAME ${CMUT_NAME}.cleanup
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${binary_dir}"
+    )
+    set_tests_properties(${CMUT_NAME}.cleanup PROPERTIES
+        FIXTURES_CLEANUP ${CMUT_NAME}.cleanup
+    )
+
     add_test(
         NAME ${CMUT_NAME}
         COMMAND
             ${CMAKE_COMMAND}
             -S "${source_dir}"
-            -B "${CMAKE_CURRENT_BINARY_DIR}/cmut/${CMUT_NAME}"
-            -D "CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
+            -B "${binary_dir}"
+            -D "CMAKE_PROJECT_INCLUDE_BEFORE=${assert_script}"
             ${CMUT_CMAKE_FLAGS}
     )
-endfunction()
 
-function(assert condition)
-    message(CHECK_START "${condition}")
-    cmake_language(EVAL
-        CODE "
-            if(NOT (${condition}))
-                message(FATAL_ERROR [=[Failed assertion: ${condition}]=])
-            endif()
-        "
+    set_tests_properties(${CMUT_NAME} PROPERTIES
+        FIXTURES_REQUIRED ${CMUT_NAME}.cleanup
     )
-    message(CHECK_PASS "Pass")
 endfunction()
 
 cmake_policy(POP)
